@@ -33,4 +33,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # Uses OIDC trusted publishing when no NPM_TOKEN secret exists. For the very first publish of a new
+      # package (before a trusted publisher can be configured), add a short-lived granular NPM_TOKEN secret,
+      # then delete it once trusted publishing is set up.
       - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
