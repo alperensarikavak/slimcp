@@ -1,0 +1,35 @@
+name: Add my MCP client
+description: Ask slimcp to discover and support another MCP client
+labels: [client-support]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Adding a client is usually one entry in `src/discover.ts` (see CONTRIBUTING.md) — PRs very welcome!
+  - type: input
+    id: name
+    attributes:
+      label: Client name and link
+      placeholder: "Zed — https://zed.dev"
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: Where does it store MCP config?
+      description: File path(s) per OS, and the key that holds the servers (e.g. `mcpServers`, `servers`, `context_servers`).
+      placeholder: |
+        macOS/Linux: ~/.config/zed/settings.json → "context_servers"
+        Windows: %APPDATA%\Zed\settings.json
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example server entry (redacted)
+      render: json
+  - type: dropdown
+    id: deferral
+    attributes:
+      label: Does the client already load MCP tools on demand (tool search / deferred loading)?
+      options: ["No, it sends every tool up front", "Yes", "Not sure"]

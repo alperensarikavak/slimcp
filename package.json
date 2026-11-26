@@ -1,0 +1,74 @@
+{
+  "name": "slimcp",
+  "version": "0.1.0",
+  "description": "Cut MCP tool token usage by 90%+ — an MCP proxy and context-window audit for Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI and Codex.",
+  "type": "module",
+  "bin": {
+    "slimcp": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bench": "npm run build && node scripts/benchmark.mjs",
+    "dev": "tsx src/cli.ts",
+    "prepublishOnly": "npm run typecheck && npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-proxy",
+    "mcp-server",
+    "ai-agents",
+    "llm",
+    "claude",
+    "claude-code",
+    "cursor",
+    "context-window",
+    "tokens",
+    "token-optimization",
+    "tool-search",
+    "gemini-cli",
+    "codex"
+  ],
+  "author": "alperensarikavak",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alperensarikavak/slimcp.git"
+  },
+  "homepage": "https://github.com/alperensarikavak/slimcp#readme",
+  "bugs": {
+    "url": "https://github.com/alperensarikavak/slimcp/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "js-tiktoken": "^1.0.21",
+    "smol-toml": "^1.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}

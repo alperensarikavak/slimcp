@@ -1,0 +1,36 @@
+name: Release
+
+# Publishes to npm when a v* tag is pushed, using npm trusted publishing (OIDC):
+# no NPM_TOKEN secret is stored in the repo, and the package gets a provenance attestation.
+# One-time setup on npmjs.com: package "slimcp" → Settings → Trusted publishing →
+# GitHub Actions, repository alperensarikavak/slimcp, workflow release.yml.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing needs npm >= 11.5.1.
+      - run: npm install -g npm@latest
+      - name: Check tag matches package.json version
+        run: |
+          v=$(node -p "require('./package.json').version")
+          if [ "v$v" != "$GITHUB_REF_NAME" ]; then echo "tag $GITHUB_REF_NAME != package.json v$v"; exit 1; fi
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --provenance --access public

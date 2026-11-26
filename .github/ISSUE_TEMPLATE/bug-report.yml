@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in slimcp does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **remove tokens, API keys and private paths** from anything you paste.
+        Security problems go to a [private advisory](https://github.com/alperensarikavak/slimcp/security/advisories/new), not here.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you run, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. npx slimcp audit --client claude-desktop
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / logs
+      description: slimcp's terminal output or the `[slimcp]` lines from your client's MCP log (redacted).
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: slimcp version
+      placeholder: "npx slimcp --version"
+    validations:
+      required: true
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      multiple: true
+      options: [Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI, Codex CLI, Custom agent / library, Other]
+  - type: input
+    id: env
+    attributes:
+      label: OS and Node version
+      placeholder: "macOS 15, Node 22.11"
