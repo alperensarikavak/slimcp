@@ -1,0 +1,10 @@
+node_modules
+dist
+.bench
+coverage
+.git
+*.tgz
+assets
+docs
+test
+scripts

@@ -23,12 +23,13 @@ export {
   toolId,
   CALL_TOOL,
   FIND_TOOLS,
+  STATUS_TOOL,
   type ExposedTool,
   type Exposure,
   type Route,
 } from "./expose.js";
 export { DEFAULT_OPTIONS, loadConfig, resolveConfig, resolveOptions } from "./config.js";
-export { SlimProxy, runStdioProxy, capResult, type ProxyOptions } from "./proxy.js";
+export { SlimProxy, runStdioProxy, capResult, type ProxyOptions, type StatusReport, type ServerState } from "./proxy.js";
 export { runAudit, grade, type AuditResult, type ClientReport, type AuditOptions } from "./audit.js";
 export { renderReport, renderMarkdown, renderJson } from "./report.js";
 export { planInit, applyInit, restore, renderPlan, slimcpEntry, type InitPlan, type InitOptions } from "./init.js";

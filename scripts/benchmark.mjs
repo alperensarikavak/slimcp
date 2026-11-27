@@ -122,7 +122,7 @@ async function main() {
       "differently and each client adds its own framing); the relative saving is what matters.",
     "",
     "slimcp settings: defaults (`pin: [\"auto\"]` with no usage history yet, `minify: \"safe\"`, `catalog: \"names\"`). " +
-      "So the slimcp column is the two meta-tools `find_tools` + `call_tool`, whose description lists every hidden tool name.",
+      "So the slimcp column is the three meta-tools `find_tools` + `call_tool` + `slimcp_status` (a fixed ~300 tokens), where `find_tools` lists every hidden tool name.",
     "",
   );
   out.push("## Tokens per request", "");

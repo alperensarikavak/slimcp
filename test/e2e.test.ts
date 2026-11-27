@@ -132,11 +132,11 @@ describe("proxy", () => {
   const home = tmp("proxy-state");
   const repo = { owner: "octocat", repo: "hello" };
 
-  it("exposes pinned tools + 2 meta-tools in under 800 tokens and routes calls", async () => {
+  it("exposes pinned tools + 3 meta-tools in under 800 tokens and routes calls", async () => {
     const p = await startProxy(home, { pin: ["auto", "github__get_issue"] });
     try {
       const { tools } = await p.client.listTools();
-      expect(tools.map((t) => t.name)).toEqual(["github__get_issue", "find_tools", "call_tool"]);
+      expect(tools.map((t) => t.name)).toEqual(["github__get_issue", "find_tools", "call_tool", "slimcp_status"]);
       const tokens = tools.reduce((a, t) => a + toolTokens(t as any), 0);
       expect(tokens).toBeLessThan(800);
 
@@ -187,10 +187,13 @@ describe("proxy", () => {
     const p = await startProxy(home, { pin: ["github__delete_label"] });
     try {
       const { tools } = await p.client.listTools();
-      expect(tools.map((t) => t.name)).toEqual(["github__delete_label", "find_tools", "call_tool"]);
+      expect(tools.map((t) => t.name)).toEqual(["github__delete_label", "find_tools", "call_tool", "slimcp_status"]);
       expect(tools[0]!.annotations).toMatchObject({ destructiveHint: true });
       // Served from the catalog cache: nothing spawned yet.
       expect(p.proxy.serverStatus()[0]).toMatchObject({ name: "github", tools: 42, connected: false });
+      const status = await p.call("slimcp_status");
+      expect(text(status)).toContain("- github: cached (starts on first call), 42 tools");
+      expect(p.proxy.serverStatus()[0]!.connected).toBe(false); // status does not start servers
 
       const ok = await p.call("github__delete_label", { ...repo, number: 1 });
       expect(ok.isError).toBeFalsy();
@@ -215,6 +218,46 @@ describe("proxy", () => {
     try {
       const { tools } = await p.client.listTools();
       expect(tools.map((t) => t.name).slice(0, 2).sort()).toEqual(["github__create_issue", "github__get_issue"].sort());
+    } finally {
+      await p.close();
+    }
+  });
+
+  it("runs with no upstream servers and still lists the meta-tools", async () => {
+    const p = await startProxy(tmp("empty-state"), { servers: {} });
+    try {
+      const { tools } = await p.client.listTools();
+      expect(tools.map((t) => t.name)).toEqual(["find_tools", "call_tool", "slimcp_status"]);
+      const status = await p.call("slimcp_status");
+      expect(status.isError).toBeFalsy();
+      expect(text(status)).toContain("0 MCP servers configured");
+      expect(text(status)).toContain("No upstream servers yet");
+      const found = await p.call("find_tools", { query: "open a pull request" });
+      expect(found.isError).toBeFalsy();
+      expect(text(found)).toContain("No tools matched");
+      const missing = await p.call("call_tool", { name: "github__create_issue", arguments: {} });
+      expect(missing.isError).toBe(true);
+    } finally {
+      await p.close();
+    }
+  });
+
+  it("slimcp_status reports connected servers, savings and failures with errors", async () => {
+    const p = await startProxy(tmp("status-state"), {
+      servers: { github: fixture, broken: { command: "slimcp-definitely-missing-binary" }, off: { command: "x", disabled: true } },
+    });
+    try {
+      const status = await p.call("slimcp_status");
+      const t = text(status);
+      expect(t).toContain("3 MCP servers configured");
+      expect(t).toContain("- github: connected, 42 tools");
+      expect(t).toMatch(/- broken: failed, 0 tools — .*(not found|ENOENT|spawn)/i);
+      expect(t).toContain("- off: disabled in config, 0 tools");
+      expect(t).toMatch(/saving ≈[\d,]+ \(−\d+%\)/);
+      const s = status.structuredContent as any;
+      expect(s.totalTools).toBe(42);
+      expect(s.savedTokens).toBeGreaterThan(4000);
+      expect(s.servers.find((x: any) => x.name === "broken").error).toBeTruthy();
     } finally {
       await p.close();
     }

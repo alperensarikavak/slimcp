@@ -1,20 +1,20 @@
 # slimcp benchmark
 
-Measured 2026-11-26 with Node v22.20.0 on win32. Tokens are counted with the o200k_base tokenizer over `{name, description, input_schema}` of each tool, which is what a client sends to the model on every request. Counts are approximate (each model tokenizes differently and each client adds its own framing); the relative saving is what matters.
+Measured 2026-11-27 with Node v22.20.0 on win32. Tokens are counted with the o200k_base tokenizer over `{name, description, input_schema}` of each tool, which is what a client sends to the model on every request. Counts are approximate (each model tokenizes differently and each client adds its own framing); the relative saving is what matters.
 
-slimcp settings: defaults (`pin: ["auto"]` with no usage history yet, `minify: "safe"`, `catalog: "names"`). So the slimcp column is the two meta-tools `find_tools` + `call_tool`, whose description lists every hidden tool name.
+slimcp settings: defaults (`pin: ["auto"]` with no usage history yet, `minify: "safe"`, `catalog: "names"`). So the slimcp column is the three meta-tools `find_tools` + `call_tool` + `slimcp_status` (a fixed ~300 tokens), where `find_tools` lists every hidden tool name.
 
 ## Tokens per request
 
 | server | tools | normal tokens | slimcp tokens | saved |
 |---|---:|---:|---:|---:|
-| github | 26 | 3,546 | 320 | −91% |
-| notion | 24 | 17,140 | 354 | −98% |
-| playwright | 25 | 3,921 | 315 | −92% |
-| filesystem | 14 | 1,678 | 268 | −84% |
-| memory | 9 | 947 | 251 | −73% |
-| everything | 13 | 1,075 | 280 | −74% |
-| **All together** | **111** | **28,307** | **719** | **−97%** |
+| github | 26 | 3,546 | 402 | −89% |
+| notion | 24 | 17,140 | 436 | −97% |
+| playwright | 25 | 3,921 | 397 | −90% |
+| filesystem | 14 | 1,678 | 350 | −79% |
+| memory | 9 | 947 | 333 | −65% |
+| everything | 13 | 1,075 | 362 | −66% |
+| **All together** | **111** | **28,307** | **801** | **−97%** |
 
 Packages:
 

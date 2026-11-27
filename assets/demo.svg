@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="504" viewBox="0 0 900 504" role="img" aria-label="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request, 14% of a 200K context window, grade D. With slimcp it is about 652 tokens, a 98% saving.">
-  <title>npx slimcp audit — 27,232 tokens of MCP tools per request, grade D; with slimcp ≈ 652 (−98%)</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="504" viewBox="0 0 900 504" role="img" aria-label="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request, 14% of a 200K context window, grade D. With slimcp it is about 734 tokens, a 97% saving.">
+  <title>npx slimcp audit — 27,232 tokens of MCP tools per request, grade D; with slimcp ≈ 734 (−97%)</title>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-size: 13px; fill: #e6edf3; }
     .l { opacity: 0; animation: in .35s ease-out forwards; }
@@ -23,7 +23,7 @@
   <text class="l" x="20" y="222" style="animation-delay:1.86s" xml:space="preserve"><tspan>    filesystem   14 tools    1,678  </tspan><tspan fill="#d2a8ff">██░░░░░░░░░░░░░░░░░░</tspan></text>
   <text class="l" x="20" y="242" style="animation-delay:1.98s" xml:space="preserve"><tspan>    memory        9 tools      947  </tspan><tspan fill="#d2a8ff">█░░░░░░░░░░░░░░░░░░░</tspan></text>
   <text class="l" x="20" y="262" style="animation-delay:2.10s" xml:space="preserve"><tspan fill="#e6edf3" font-weight="700">  98 tools · 27,232 tokens · 14% of a 200K window</tspan><tspan fill="#7d8590"> — sent with every request</tspan><tspan>   grade </tspan><tspan fill="#f85149" font-weight="700">D</tspan></text>
-  <text class="l" x="20" y="282" style="animation-delay:2.22s" xml:space="preserve"><tspan fill="#3fb950">  with slimcp ≈ 652 tokens → saves 26,580 (−98%)</tspan></text>
+  <text class="l" x="20" y="282" style="animation-delay:2.22s" xml:space="preserve"><tspan fill="#3fb950">  with slimcp ≈ 734 tokens → saves 26,498 (−97%)</tspan></text>
   <text class="l" x="20" y="302" style="animation-delay:2.34s" xml:space="preserve"></text>
   <text class="l" x="20" y="322" style="animation-delay:2.46s" xml:space="preserve"><tspan fill="#e6edf3" font-weight="700">Heaviest tools</tspan></text>
   <text class="l" x="20" y="342" style="animation-delay:2.58s" xml:space="preserve"><tspan>  notion__API-update-page-markdown   1,267</tspan></text>

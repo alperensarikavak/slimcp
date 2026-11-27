@@ -13,12 +13,12 @@
 
 <sub>Listed on <a href="https://glama.ai/mcp/servers/alperensarikavak/slimcp">Glama</a></sub>
 
-<img src="https://raw.githubusercontent.com/alperensarikavak/slimcp/main/assets/demo.svg" alt="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request (14% of a 200K window, grade D). With slimcp it is about 652 tokens, 98% less." width="900">
+<img src="https://raw.githubusercontent.com/alperensarikavak/slimcp/main/assets/demo.svg" alt="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request (14% of a 200K window, grade D). With slimcp it is about 734 tokens, 97% less." width="900">
 
 </div>
 
 Six popular MCP servers put **111 tool definitions — 28,307 tokens — into every single request**, before you type a word.
-Behind slimcp the same 111 tools cost **719 tokens (−97%)**, and the model still finds and calls every one of them.
+Behind slimcp the same 111 tools cost **801 tokens (−97%)**, and the model still finds and calls every one of them.
 Find out what your setup costs in 30 seconds:
 
 ```bash
@@ -58,13 +58,13 @@ Real servers, tools/list only, o200k tokenizer, slimcp defaults ([full report](d
 
 | server | tools | normal tokens | slimcp tokens | saved |
 |---|---:|---:|---:|---:|
-| github | 26 | 3,546 | 320 | −91% |
-| notion | 24 | 17,140 | 354 | −98% |
-| playwright | 25 | 3,921 | 315 | −92% |
-| filesystem | 14 | 1,678 | 268 | −84% |
-| memory | 9 | 947 | 251 | −73% |
-| everything | 13 | 1,075 | 280 | −74% |
-| **All together** | **111** | **28,307** | **719** | **−97%** |
+| github | 26 | 3,546 | 402 | −89% |
+| notion | 24 | 17,140 | 436 | −97% |
+| playwright | 25 | 3,921 | 397 | −90% |
+| filesystem | 14 | 1,678 | 350 | −79% |
+| memory | 9 | 947 | 333 | −65% |
+| everything | 13 | 1,075 | 362 | −66% |
+| **All together** | **111** | **28,307** | **801** | **−97%** |
 
 **Search accuracy.** 40 natural-language requests ("merge the PR", "take a screenshot of the page", "rename a file", …) searched across all 111 tools at once:
 
@@ -93,7 +93,7 @@ flowchart LR
         T["call_tool<br/>routes to the real server"]
         K[("~/.slimcp/cache<br/>tool catalogs")]
     end
-    C -- "tools/list: pinned + 2 meta-tools" --> S
+    C -- "tools/list: pinned + 3 meta-tools" --> S
     S --> G["github"]
     S --> N["notion"]
     S --> W["playwright"]
@@ -102,9 +102,10 @@ flowchart LR
 ```
 
 1. Your client starts **one** server — slimcp — instead of many.
-2. `tools/list` returns your **pinned tools** (full schemas) plus two meta-tools:
+2. `tools/list` returns your **pinned tools** (full schemas) plus three meta-tools, always present — even with no servers configured yet:
    - **`find_tools`** — its description lists every hidden tool name, grouped by server, and tells the model to search *before* saying something is impossible. A search returns the best matches with compact schemas.
    - **`call_tool`** — runs a hidden tool by id (`github__create_issue`) with its arguments.
+   - **`slimcp_status`** — read-only: which servers are connected, cached or failing (with the error), tool counts and the estimated tokens saved.
 3. **Lazy start**: catalogs are cached in `~/.slimcp/cache`, so slimcp answers `initialize` + `tools/list` in about half a second (including its own startup) without spawning a single server. A server starts the first time one of its tools is actually called.
 4. **Auto-pinning**: slimcp counts calls locally; your top 5 tools are pinned automatically next session, so everyday tools need no search.
 5. **Output caps**: a tool that returns 50,000 words is cut to 12,000 tokens with a note asking the model for a narrower result.
@@ -254,6 +255,16 @@ Claude Code's own tool search usually makes this unnecessary — see the [FAQ](#
 </details>
 
 <details>
+<summary><b>Docker</b></summary>
+
+```bash
+docker build -t slimcp https://github.com/alperensarikavak/slimcp.git
+docker run -i --rm -v ~/.slimcp/config.json:/config/slimcp.json:ro slimcp
+```
+Without a mounted config it starts with no upstream servers and only the three meta-tools. The image needs no network at runtime; stdio servers you add must exist inside the container (or use `url` servers).
+</details>
+
+<details>
 <summary><b>Your own agent</b> (library API)</summary>
 
 ```ts
@@ -297,7 +308,7 @@ If your client already defers tools natively and you are happy with it, keep usi
 
 ### How do I reduce MCP token usage?
 
-Run `npx slimcp audit` to see which client and which server costs the most. Then either remove servers you do not use, or run `npx slimcp init --yes` so the client sees a handful of pinned tools plus `find_tools`/`call_tool` instead of every schema. In the benchmark that is 28,307 → 719 tokens per request.
+Run `npx slimcp audit` to see which client and which server costs the most. Then either remove servers you do not use, or run `npx slimcp init --yes` so the client sees a handful of pinned tools plus `find_tools`/`call_tool` instead of every schema. In the benchmark that is 28,307 → 801 tokens per request. The three meta-tools are a fixed ~300 tokens, so the saving grows with the number of tools you have.
 
 ### Why is my Claude context full of MCP tools?
 

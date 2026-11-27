@@ -1,6 +1,6 @@
 # Launch kit
 
-All numbers below are measured (see [benchmark.md](benchmark.md)): six popular MCP servers = **111 tools, 28,307 tokens per request → 719 with slimcp (−97%)**. The demo setup (Claude Desktop, five servers) = **27,232 tokens, 14% of a 200K window, grade D → ≈652 (−98%)**. Search: top-1 68%, top-3 85%, top-5 93% on 40 queries. Don't round these up.
+All numbers below are measured (see [benchmark.md](benchmark.md)): six popular MCP servers = **111 tools, 28,307 tokens per request → 801 with slimcp (−97%)**. The demo setup (Claude Desktop, five servers) = **27,232 tokens, 14% of a 200K window, grade D → ≈734 (−97%)**. Search: top-1 68%, top-3 85%, top-5 93% on 40 queries. Don't round these up.
 
 Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.com/package/slimcp
 
@@ -10,7 +10,7 @@ Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.
 
 **Title** (≤ 80 chars):
 
-> Show HN: Slimcp – cut MCP tool definitions from 28k tokens to 719 per request
+> Show HN: Slimcp – cut MCP tool definitions from 28k tokens to 801 per request
 
 **Text:**
 
@@ -20,7 +20,7 @@ Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.
 >
 > 1. `npx slimcp audit` — finds the MCP configs of Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI and Codex on your machine, starts each server once, and tells you per client how many tokens you pay per request, as a share of the window and an A–F grade. It also tells you when Claude Code's built-in tool search has been silently turned off (e.g. by an ANTHROPIC_BASE_URL gateway).
 >
-> 2. A stdio MCP proxy. Your client sees your most-used tools (auto-pinned from local stats) plus `find_tools` and `call_tool`. The hidden tools are found with a small BM25 index — no embeddings, no network. Same six servers: 719 tokens (−97%). Catalogs are cached so startup doesn't spawn anything; huge tool outputs are capped; destructive tools only run when pinned so your client still asks for approval.
+> 2. A stdio MCP proxy. Your client sees your most-used tools (auto-pinned from local stats) plus `find_tools` and `call_tool`. The hidden tools are found with a small BM25 index — no embeddings, no network. Same six servers: 801 tokens (−97%). Catalogs are cached so startup doesn't spawn anything; huge tool outputs are capped; destructive tools only run when pinned so your client still asks for approval.
 >
 > Honest caveats: Claude Code and Cursor already defer tools natively, so this mostly helps clients that don't (Claude Desktop, Gemini CLI, Windsurf, VS Code, Codex), local models and custom agents. Search adds a step and isn't perfect (68% top-1 / 93% top-5 on my 40-query benchmark — the misses are in the repo). There are similar proxies (lazy-mcp, mcp-lazy-proxy); the audit, one-command init/restore and the safety gate are what I wanted on top.
 >
@@ -36,7 +36,7 @@ Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.
 
 > If you use Claude Desktop with a few MCP servers: every tool definition is sent with every message. My five servers (Notion, Playwright, GitHub, filesystem, memory) cost **27,232 tokens per request — grade D**.
 >
-> `npx slimcp audit` shows this per client and per server (read-only, nothing to install). `npx slimcp init --yes` then puts a small proxy in front: Claude sees a few pinned tools plus a search tool, and the same setup drops to ~650 tokens. Backups are made and `npx slimcp restore` undoes it.
+> `npx slimcp audit` shows this per client and per server (read-only, nothing to install). `npx slimcp init --yes` then puts a small proxy in front: Claude sees a few pinned tools plus a search tool, and the same setup drops to ~730 tokens. Backups are made and `npx slimcp restore` undoes it.
 >
 > Claude Code users: you probably don't need the proxy — its tool search already defers MCP tools — but the audit will tell you if it's been turned off (e.g. by a custom ANTHROPIC_BASE_URL).
 >
@@ -48,7 +48,7 @@ Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.
 
 > With local models the context window is precious: 111 tools from six common MCP servers = 28,307 tokens of tool definitions per request (o200k count; your tokenizer will differ, the ratio holds).
 >
-> slimcp is a stdio MCP proxy that exposes your most-used tools plus `find_tools`/`call_tool`, with a plain BM25 search over the rest — no embeddings model, no API, nothing leaves your machine. 719 tokens for the same 111 tools. It also caps giant tool outputs (default 12k tokens) so one `read_file` doesn't blow the window.
+> slimcp is a stdio MCP proxy that exposes your most-used tools plus `find_tools`/`call_tool`, with a plain BM25 search over the rest — no embeddings model, no API, nothing leaves your machine. 801 tokens for the same 111 tools. It also caps giant tool outputs (default 12k tokens) so one `read_file` doesn't blow the window.
 >
 > `npx slimcp audit --window 32k` grades your setup against a smaller window. Works with any MCP client or as a library in your own agent. Benchmark + search accuracy (68% top-1, 93% top-5) are in the repo: https://github.com/alperensarikavak/slimcp
 
@@ -62,7 +62,7 @@ Links: repo https://github.com/alperensarikavak/slimcp · npm https://www.npmjs.
 > - safety: tools with `destructiveHint: true` are refused through `call_tool` until pinned, so the client's per-tool approval still applies.
 > - `init --yes` / `restore` with backups; configs with secrets are 0600.
 >
-> Numbers: 28,307 → 719 tokens for GitHub+Notion+Playwright+filesystem+memory+everything. Feedback on the search and on server annotations very welcome: https://github.com/alperensarikavak/slimcp
+> Numbers: 28,307 → 801 tokens for GitHub+Notion+Playwright+filesystem+memory+everything. Feedback on the search and on server annotations very welcome: https://github.com/alperensarikavak/slimcp
 
 ---
 
@@ -75,7 +75,7 @@ Attach a screenshot of the audit (the grade line visible) — e.g. crop `assets/
 2. Why: MCP clients send every tool's name + description + JSON schema with every request. Notion's server alone is ~17k tokens.
 3. So I built slimcp. Check yours in 30 seconds, read-only:
    `npx slimcp audit`
-4. Fix it: `npx slimcp init --yes`. Your client sees your most-used tools + a search tool. Six popular servers go from 28,307 → 719 tokens (−97%). `npx slimcp restore` undoes it.
+4. Fix it: `npx slimcp init --yes`. Your client sees your most-used tools + a search tool. Six popular servers go from 28,307 → 801 tokens (−97%). `npx slimcp restore` undoes it.
 5. Search is local BM25 — no embeddings, no network, no telemetry. 93% of my 40 test queries hit in the top 5; your daily tools are auto-pinned so they skip search entirely.
 6. Safety: destructive tools only run when pinned, so your client still asks before each call. Backups + 0600 secret files.
 7. Claude Code / Cursor already defer tools natively — the audit tells you if that got switched off.
@@ -98,7 +98,7 @@ Section: aggregators / developer tools (whichever covers proxies).
 > - [alperensarikavak/slimcp](https://github.com/alperensarikavak/slimcp) 📇 🏠 🍎 🪟 🐧 - MCP proxy that cuts tool-definition tokens by 90%+ (pinned tools + local BM25 `find_tools`/`call_tool`), with a per-client context audit for Claude Desktop, Cursor, VS Code, Windsurf, Gemini CLI and Codex.
 
 PR title: `Add slimcp (MCP proxy that cuts tool-definition tokens)`
-PR body: "slimcp is an MIT stdio MCP proxy that exposes pinned tools plus a search/call pair, cutting six popular servers from 28,307 to 719 tokens per request (benchmark in repo). It also audits MCP context usage per client. TypeScript, local only, no telemetry."
+PR body: "slimcp is an MIT stdio MCP proxy that exposes pinned tools plus a search/call pair, cutting six popular servers from 28,307 to 801 tokens per request (benchmark in repo). It also audits MCP context usage per client. TypeScript, local only, no telemetry."
 
 ### hesreallyhim/awesome-claude-code
 

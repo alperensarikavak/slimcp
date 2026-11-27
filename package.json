@@ -1,6 +1,6 @@
 {
   "name": "slimcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cut MCP tool token usage by 90%+ — an MCP proxy and context-window audit for Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Gemini CLI and Codex.",
   "type": "module",
   "bin": {

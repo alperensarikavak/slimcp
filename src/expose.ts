@@ -5,6 +5,7 @@ import type { SlimOptions, UpstreamTool } from "./types.js";
 
 export const FIND_TOOLS = "find_tools";
 export const CALL_TOOL = "call_tool";
+export const STATUS_TOOL = "slimcp_status";
 const MAX_ID = 64;
 
 /** `server__tool`, restricted to [A-Za-z0-9_-] and at most 64 characters. */
@@ -107,52 +108,72 @@ export function buildExposure(
   }
 
   const hidden = [...routes.values()].filter((r) => !pinned.has(r.id));
-  if (hidden.length > 0) tools.push(findToolsDef(hidden, cfg), callToolDef());
+  // The meta-tools are always exposed, even with no upstream servers, so clients
+  // (and registries that introspect slimcp) always see a stable tool surface.
+  const servers = entries.filter(([, t]) => t.length > 0).map(([s]) => s);
+  tools.push(findToolsDef(hidden, servers, cfg), callToolDef(cfg), statusToolDef());
   return { tools, routes, pinned, hiddenCount: hidden.length, index };
 }
 
-function findToolsDef(hidden: Route[], cfg: SlimOptions): ExposedTool {
+function findToolsDef(hidden: Route[], servers: string[], cfg: SlimOptions): ExposedTool {
   const byServer = new Map<string, string[]>();
   for (const r of hidden) byServer.set(r.server, [...(byServer.get(r.server) ?? []), r.tool.name]);
-  const servers = [...byServer.keys()];
-  let catalog: string;
-  if (cfg.catalog === "servers") {
-    catalog = servers.map((s) => `${s} (${byServer.get(s)!.length})`).join(", ");
-  } else {
-    catalog = servers.map((s) => `${s}: ${byServer.get(s)!.join(", ")}`).join("\n");
+  const withHidden = [...byServer.keys()];
+  let catalog = "";
+  if (withHidden.length && cfg.catalog === "servers") {
+    catalog = "\n" + withHidden.map((s) => `${s} (${byServer.get(s)!.length})`).join(", ");
+  } else if (withHidden.length) {
+    catalog = "\n" + withHidden.map((s) => `${s}: ${byServer.get(s)!.join(", ")}`).join("\n");
   }
+  const what = hidden.length ? `${hidden.length} hidden MCP tools (listed below)` : "hidden MCP tools (none right now)";
   const description =
-    `Search ${hidden.length} more tools from ${servers.length} MCP server${servers.length === 1 ? "" : "s"} ` +
-    `and get their input schemas. Call this BEFORE saying something is impossible or a tool is missing. ` +
-    `Then run a result with ${CALL_TOOL}.\n${catalog}`;
+    `Search ${what} by task; returns ids and input schemas. Use it before saying a tool is missing. ` +
+    `Read-only, local. Run results with ${CALL_TOOL}.${catalog}`;
+  const server: Record<string, unknown> = { type: "string", description: "Limit to one server." };
+  if (servers.length) server.enum = servers;
   return {
     name: FIND_TOOLS,
     description,
     inputSchema: {
       type: "object",
       properties: {
-        query: { type: "string", description: "What you want to do, in plain words (e.g. \"open a pull request\")." },
-        server: { type: "string", enum: servers, description: "Only search this server." },
-        limit: { type: "integer", minimum: 1, maximum: 25, description: `Max results (default ${cfg.searchLimit}).` },
+        query: { type: "string", description: 'Task in plain words, e.g. "open a pull request". Empty + server lists its tools.' },
+        server,
+        limit: { type: "integer", minimum: 1, maximum: 25, description: `Max results, default ${cfg.searchLimit}.` },
       },
       required: ["query"],
     },
-    annotations: { readOnlyHint: true },
+    annotations: { readOnlyHint: true, openWorldHint: false },
   };
 }
 
-function callToolDef(): ExposedTool {
+function callToolDef(cfg: SlimOptions): ExposedTool {
+  const cap = cfg.maxResultTokens ? ` Output over ${cfg.maxResultTokens.toLocaleString("en-US")} tokens is cut.` : "";
   return {
     name: CALL_TOOL,
-    description: `Run a tool found with ${FIND_TOOLS}. Pass its id as name and its arguments as an object.`,
+    description:
+      `Run a tool found by ${FIND_TOOLS} and return its result. May change data or call external services; ` +
+      `destructive tools are refused unless pinned.${cap}`,
     inputSchema: {
       type: "object",
       properties: {
         name: { type: "string", description: "Tool id from find_tools, e.g. github__create_issue." },
-        arguments: { type: "object", description: "Arguments matching the tool's schema." },
+        arguments: { type: "object", description: "Arguments matching that tool's schema (object or JSON string)." },
       },
       required: ["name"],
     },
+    annotations: { readOnlyHint: false, openWorldHint: true },
+  };
+}
+
+function statusToolDef(): ExposedTool {
+  return {
+    name: STATUS_TOOL,
+    description:
+      "Show each MCP server's state (connected, cached, or failed with its error), tool counts and estimated " +
+      "tokens saved. Use when a tool or server seems missing. Read-only.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true, openWorldHint: false },
   };
 }
 

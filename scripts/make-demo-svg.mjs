@@ -16,7 +16,7 @@ const L = [
   [["    filesystem   14 tools    1,678  "], ["██░░░░░░░░░░░░░░░░░░", C.mag]],
   [["    memory        9 tools      947  "], ["█░░░░░░░░░░░░░░░░░░░", C.mag]],
   [["  98 tools · 27,232 tokens · 14% of a 200K window", C.fg, true], [" — sent with every request", C.dim], ["   grade "], ["D", C.red, true]],
-  [["  with slimcp ≈ 652 tokens → saves 26,580 (−98%)", C.green]],
+  [["  with slimcp ≈ 734 tokens → saves 26,498 (−97%)", C.green]],
   [],
   [["Heaviest tools", C.fg, true]],
   [["  notion__API-update-page-markdown   1,267"]],
@@ -39,8 +39,8 @@ const lines = L.map((segs, i) => {
   return `  <text class="l" x="20" y="${TOP + i * LH}" style="animation-delay:${delay.toFixed(2)}s" xml:space="preserve">${spans}</text>`;
 });
 
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request, 14% of a 200K context window, grade D. With slimcp it is about 652 tokens, a 98% saving.">
-  <title>npx slimcp audit — 27,232 tokens of MCP tools per request, grade D; with slimcp ≈ 652 (−98%)</title>
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request, 14% of a 200K context window, grade D. With slimcp it is about 734 tokens, a 97% saving.">
+  <title>npx slimcp audit — 27,232 tokens of MCP tools per request, grade D; with slimcp ≈ 734 (−97%)</title>
   <style>
     text { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-size: 13px; fill: ${C.fg}; }
     .l { opacity: 0; animation: in .35s ease-out forwards; }

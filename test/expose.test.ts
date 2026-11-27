@@ -44,18 +44,32 @@ describe("buildExposure", () => {
     fs: [tool("read_file"), tool("write_file")],
   };
 
-  it("exposes pinned tools plus find_tools and call_tool", () => {
+  it("exposes pinned tools plus find_tools, call_tool and slimcp_status", () => {
     const e = buildExposure(catalogs, { ...DEFAULT_OPTIONS, pin: ["fs__read_file"] });
-    expect(e.tools.map((t) => t.name)).toEqual(["fs__read_file", "find_tools", "call_tool"]);
+    expect(e.tools.map((t) => t.name)).toEqual(["fs__read_file", "find_tools", "call_tool", "slimcp_status"]);
     expect(e.hiddenCount).toBe(4);
     const find = e.tools.find((t) => t.name === "find_tools")!;
-    expect(find.description).toContain("Search 4 more tools");
-    expect(find.description).toContain("BEFORE saying something is impossible");
+    expect(find.description).toContain("Search 4 hidden MCP tools (listed below)");
+    expect(find.description).toContain("before saying a tool is missing");
     expect(find.description).toContain("github: create_issue, delete_label, list_issues");
     expect((find.inputSchema as any).properties.server.enum).toEqual(["github", "fs"]);
-    expect(find.annotations).toEqual({ readOnlyHint: true });
+    expect(find.annotations).toEqual({ readOnlyHint: true, openWorldHint: false });
+    // call_tool must never look read-only or auto-approvable.
     const call = e.tools.find((t) => t.name === "call_tool")!;
-    expect(call.annotations).toBeUndefined();
+    expect(call.annotations).toEqual({ readOnlyHint: false, openWorldHint: true });
+    expect(call.description).toContain("Output over 12,000 tokens is cut");
+    expect(call.description).toContain("destructive tools are refused unless pinned");
+    const status = e.tools.find((t) => t.name === "slimcp_status")!;
+    expect(status.annotations).toEqual({ readOnlyHint: true, openWorldHint: false });
+    expect(status.inputSchema).toEqual({ type: "object", properties: {} });
+  });
+
+  it("always exposes the meta-tools, even with no servers", () => {
+    const e = buildExposure({}, DEFAULT_OPTIONS);
+    expect(e.tools.map((t) => t.name)).toEqual(["find_tools", "call_tool", "slimcp_status"]);
+    const find = e.tools[0]!;
+    expect(find.description).toContain("(none right now)");
+    expect((find.inputSchema as any).properties.server.enum).toBeUndefined();
   });
 
   it("lists only server names with catalog: servers", () => {
@@ -65,10 +79,10 @@ describe("buildExposure", () => {
     expect(find.description).not.toContain("create_issue");
   });
 
-  it("omits meta-tools when everything is pinned", () => {
+  it("keeps the meta-tools when everything is pinned", () => {
     const e = buildExposure(catalogs, { ...DEFAULT_OPTIONS, pin: ["github__*", "fs__*"] });
-    expect(e.tools.map((t) => t.name)).not.toContain("find_tools");
-    expect(e.tools).toHaveLength(5);
+    expect(e.hiddenCount).toBe(0);
+    expect(e.tools.map((t) => t.name).slice(5)).toEqual(["find_tools", "call_tool", "slimcp_status"]);
   });
 
   it("auto-pins the most used tools", () => {

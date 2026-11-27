@@ -14,12 +14,13 @@ import {
   isDestructive,
   renderHits,
   renderServerListing,
+  STATUS_TOOL,
   toolId,
   type Exposure,
   type Route,
 } from "./expose.js";
 import { loadCatalog, mostUsed, readUsage, saveCatalog, slimcpHome, UsageTracker } from "./state.js";
-import { countTokens, truncateToTokens } from "./tokens.js";
+import { countTokens, toolTokens, truncateToTokens } from "./tokens.js";
 import type { ResolvedConfig, ServerSpec, UpstreamTool } from "./types.js";
 import { VERSION } from "./version.js";
 
@@ -43,9 +44,22 @@ interface Upstream {
 
 type Args = Record<string, unknown>;
 
+export type ServerState = "connected" | "connecting" | "cached" | "failed" | "disabled" | "not started";
+
+export interface StatusReport {
+  version: string;
+  servers: { name: string; state: ServerState; tools: number; error?: string }[];
+  totalTools: number;
+  exposedTools: number;
+  fullTokens: number;
+  exposedTokens: number;
+  savedTokens: number;
+}
+
 export const INSTRUCTIONS =
   "slimcp keeps most MCP tools behind a search to save context. Before concluding that a capability is " +
-  `missing or impossible, call ${FIND_TOOLS} with what you want to do, then run the result with ${CALL_TOOL}.`;
+  `missing or impossible, call ${FIND_TOOLS} with what you want to do, then run the result with ${CALL_TOOL}. ` +
+  `If a server or tool seems unavailable, ${STATUS_TOOL} shows what is connected and what failed.`;
 
 export function errorResult(text: string): CallToolResult {
   return { isError: true, content: [{ type: "text", text }] };
@@ -158,6 +172,61 @@ export class SlimProxy {
     }));
   }
 
+  /** Data behind the slimcp_status tool. */
+  statusReport(): StatusReport {
+    const servers: StatusReport["servers"] = this.config.servers.map((spec) => {
+      const u = this.upstreams.get(spec.name);
+      if (!u) return { name: spec.name, state: "disabled", tools: 0 };
+      const tools = u.tools?.length ?? 0;
+      if (u.conn) return { name: spec.name, state: "connected", tools };
+      if (u.connecting) return { name: spec.name, state: "connecting", tools };
+      if (u.error && !u.tools) return { name: spec.name, state: "failed", tools: 0, error: u.error };
+      if (u.tools) return { name: spec.name, state: "cached", tools, ...(u.error ? { error: u.error } : {}) };
+      return { name: spec.name, state: "not started", tools: 0 };
+    });
+    const all = [...this.exposure.routes.values()];
+    const fullTokens = all.reduce((a, r) => a + toolTokens(r.tool), 0);
+    const exposedTokens = this.exposure.tools.reduce((a, t) => a + toolTokens(t), 0);
+    return {
+      version: VERSION,
+      servers,
+      totalTools: all.length,
+      exposedTools: this.exposure.tools.length,
+      fullTokens,
+      exposedTokens,
+      savedTokens: Math.max(0, fullTokens - exposedTokens),
+    };
+  }
+
+  private statusResult(): CallToolResult {
+    const r = this.statusReport();
+    const fmt = (n: number) => n.toLocaleString("en-US");
+    const lines = [`slimcp ${r.version}: ${r.servers.length} MCP server${r.servers.length === 1 ? "" : "s"} configured`];
+    if (!r.servers.length) {
+      lines.push(`No upstream servers yet. Add them under "servers" in ${this.config.path ?? "the slimcp config file"}.`);
+    }
+    const label: Record<ServerState, string> = {
+      connected: "connected",
+      connecting: "connecting",
+      cached: "cached (starts on first call)",
+      failed: "failed",
+      disabled: "disabled in config",
+      "not started": "not started",
+    };
+    for (const s of r.servers) {
+      lines.push(`- ${s.name}: ${label[s.state]}, ${s.tools} tools${s.error ? ` — ${s.error}` : ""}`);
+    }
+    if (r.totalTools) {
+      const pct = Math.round((r.savedTokens / r.fullTokens) * 100);
+      lines.push(
+        `Tokens per request: ${fmt(r.totalTools)} tools would cost ≈${fmt(r.fullTokens)}; slimcp exposes ` +
+          `${r.exposedTools} for ≈${fmt(r.exposedTokens)}, saving ≈${fmt(r.savedTokens)} (−${pct}%). ` +
+          `Counts use the o200k tokenizer and are approximate.`,
+      );
+    }
+    return { content: [{ type: "text", text: lines.join("\n") }], structuredContent: { ...r } };
+  }
+
   private rebuild(): void {
     const catalogs = new Map<string, UpstreamTool[]>();
     for (const [name, u] of this.upstreams) if (u.tools) catalogs.set(name, u.tools);
@@ -225,6 +294,7 @@ export class SlimProxy {
   async handleCall(name: string, args: Args): Promise<CallToolResult> {
     try {
       if (name === FIND_TOOLS) return this.findTools(args);
+      if (name === STATUS_TOOL) return this.statusResult();
       if (name === CALL_TOOL) return await this.callTool(args);
       const route = this.exposure.routes.get(name);
       if (!route) return this.unknownTool(name);
@@ -257,7 +327,9 @@ export class SlimProxy {
     const hits = this.exposure.index.search(query, { server, limit });
     let text = hits.length
       ? renderHits(hits, render)
-      : `No tools matched "${query}". Try other words, or pass server with an empty query to list a server's tools. Servers: ${servers.join(", ")}`;
+      : servers.length
+        ? `No tools matched "${query}". Try other words, or pass server with an empty query to list a server's tools. Servers: ${servers.join(", ")}`
+        : `No tools matched "${query}": no upstream MCP servers are configured. ${STATUS_TOOL} shows slimcp's configuration.`;
     const failed = [...this.upstreams.values()].filter((u) => !u.tools && u.error);
     if (failed.length) text += `\n\nNote: not available right now: ${failed.map((u) => `${u.spec.name} (${u.error})`).join("; ")}`;
     return { content: [{ type: "text", text }] };
