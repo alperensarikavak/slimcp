@@ -30,6 +30,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
+      # vitest 4 needs Node 20+; Node 18 is still covered by typecheck, build and the smoke test below.
       - run: npm test
+        if: matrix.node != 18
       - name: CLI smoke test
         run: node dist/cli.js --version && node dist/cli.js help
+      - name: Runtime smoke test (proxy over stdio against the fixture)
+        run: node scripts/smoke.mjs

@@ -4,7 +4,7 @@ Thanks for helping! Bug reports, client support, benchmark queries and docs fixe
 
 ## Dev setup
 
-Node 18.17 or newer.
+slimcp itself runs on Node 18.17 or newer. Developing it needs **Node 20.19+** (vitest 4 and vite 8 do not support Node 18).
 
 ```bash
 git clone https://github.com/alperensarikavak/slimcp && cd slimcp
@@ -12,6 +12,7 @@ npm install
 npm run typecheck
 npm test            # unit + e2e (spawns test/fixtures/server.mjs, a fake 42-tool MCP server)
 npm run build
+node scripts/smoke.mjs            # vitest-free runtime check; CI runs it on Node 18 as well
 npm run dev -- audit --cached     # run the CLI from source
 ```
 
@@ -54,6 +55,6 @@ just to make a benchmark query pass — if you improve search, show that it help
 ## Pull requests
 
 - Keep PRs focused; add or update tests.
-- `npm run typecheck && npm test` must pass (CI runs Node 18/20/22 on Linux, macOS and Windows).
+- `npm run typecheck && npm test` must pass. CI runs Node 18/20/22 on Linux, macOS and Windows (tests on 20/22; Node 18 gets typecheck, build and `scripts/smoke.mjs`).
 - Never add network calls, telemetry or logging of tool arguments/results. See [SECURITY.md](SECURITY.md).
 - Add a line to `CHANGELOG.md` under an "Unreleased" heading.
