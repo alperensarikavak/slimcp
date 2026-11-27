@@ -11,6 +11,8 @@
 [![MCP compatible](https://img.shields.io/badge/MCP-compatible-8A2BE2)](https://modelcontextprotocol.io)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 
+<sub>Listed on <a href="https://glama.ai/mcp/servers/alperensarikavak/slimcp">Glama</a></sub>
+
 <img src="https://raw.githubusercontent.com/alperensarikavak/slimcp/main/assets/demo.svg" alt="Terminal running npx slimcp audit: Claude Desktop with notion, playwright, github, filesystem and memory MCP servers sends 98 tools and 27,232 tokens with every request (14% of a 200K window, grade D). With slimcp it is about 652 tokens, 98% less." width="900">
 
 </div>
